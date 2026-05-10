@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 WORKDIR /sandbox
 
-ENV PYTHONPATH=/sandbox
+ENV PYTHONPATH=/sandbox/platform
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends bash jq ca-certificates curl \
@@ -20,4 +20,4 @@ ENV SANDBOX_ROOT=/sandbox
 
 EXPOSE 9090
 
-CMD ["uvicorn", "platform.api:app", "--host", "0.0.0.0", "--port", "9090"]
+CMD ["uvicorn", "api:app", "--app-dir", "/sandbox/platform", "--host", "0.0.0.0", "--port", "9090"]
