@@ -1,0 +1,23 @@
+FROM python:3.12-slim
+
+WORKDIR /sandbox
+
+ENV PYTHONPATH=/sandbox
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends bash jq ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=docker:27-cli /usr/local/bin/docker /usr/local/bin/docker
+
+COPY platform/requirements.txt /sandbox/platform/requirements.txt
+RUN pip install --no-cache-dir -r /sandbox/platform/requirements.txt
+
+COPY platform /sandbox/platform
+
+ENV PYTHONUNBUFFERED=1
+ENV SANDBOX_ROOT=/sandbox
+
+EXPOSE 9090
+
+CMD ["uvicorn", "platform.api:app", "--host", "0.0.0.0", "--port", "9090"]

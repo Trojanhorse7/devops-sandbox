@@ -1,0 +1,15 @@
+.env
+logs/
+!logs/.gitkeep
+envs/
+!envs/.gitkeep
+nginx/conf.d/env-*.conf
+!nginx/conf.d/env-bootstrap.conf
+*.pid
+.cleanup.pid
+.health_poller.pid
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+envs/.sim/
