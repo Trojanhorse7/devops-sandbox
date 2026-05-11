@@ -129,7 +129,7 @@ This repository is intentionally minimal; add a workflow that runs `shellcheck`,
 
 ## Submission  
 
-- **Walkthrough video** :  
+- **Walkthrough video** :  https://drive.google.com/file/d/1qf7CvUC32DKePSElOvqUax1l9GLANbhH/view?usp=sharing
 
 ```
 devops-sandbox/
