@@ -86,8 +86,11 @@ if ! docker exec "${NGINX_CONTAINER_NAME}" nginx -s reload >/dev/null 2>&1; then
   exit 1
 fi
 
-docker logs -f "${CONTAINER_NAME}" >> "${SANDBOX_ROOT}/logs/${ENV_ID}/app.log" 2>&1 &
+# nohup: when this script is run via the API (subprocess), bash exits right after and
+# would SIGHUP plain background jobs — docker logs would die and app.log stays empty.
+nohup docker logs -f "${CONTAINER_NAME}" >> "${SANDBOX_ROOT}/logs/${ENV_ID}/app.log" 2>&1 &
 LOG_SHIPPER_PID=$!
+disown "${LOG_SHIPPER_PID}" 2>/dev/null || true
 
 PAYLOAD="$(python3 -c 'import json,sys; print(json.dumps({"id":sys.argv[1],"name":sys.argv[2],"created_at":sys.argv[3],"ttl":int(sys.argv[4]),"status":"healthy","network":sys.argv[5],"container_name":sys.argv[6],"nginx_snippet":sys.argv[7],"log_shipper_pid":int(sys.argv[8])}))' \
   "${ENV_ID}" "${ENV_NAME}" "${CREATED_AT}" "${TTL_SECONDS}" "${NETWORK_NAME}" "${CONTAINER_NAME}" "${NGINX_SNIPPET}" "${LOG_SHIPPER_PID}")"
