@@ -47,6 +47,10 @@ def _atomic_write_state(data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     tmp.replace(path)
+    try:
+        path.chmod(0o644)
+    except OSError:
+        pass
 
 
 def _ttl_remaining_seconds(data: dict[str, Any]) -> int:

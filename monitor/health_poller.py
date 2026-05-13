@@ -39,7 +39,7 @@ def poll_once() -> None:
     for state_path in sorted(env_dir.glob("*.json")):
         try:
             data = json.loads(state_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, OSError):
             continue
         env_id = str(data.get("id", ""))
         if not env_id:

@@ -30,6 +30,8 @@ STATE_PATH="${SANDBOX_ROOT}/envs/${ENV_ID}.json"
 CREATED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 mkdir -p "${SANDBOX_ROOT}/logs/${ENV_ID}" "${SANDBOX_ROOT}/envs"
+# Allow the host-side health poller (non-root) to write health.log / health_tracker.json
+chmod a+rwx "${SANDBOX_ROOT}/logs/${ENV_ID}" 2>/dev/null || true
 
 if ! docker image inspect "${DEMO_IMAGE}" >/dev/null 2>&1; then
   docker build -t "${DEMO_IMAGE}" "${SANDBOX_ROOT}/platform/demo"

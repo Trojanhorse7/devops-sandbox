@@ -51,6 +51,11 @@ try:
         handle.flush()
         os.fsync(handle.fileno())
     os.replace(tmp_path, path)
+    # world-readable so the host-side health poller (non-root) can read state files
+    try:
+        os.chmod(path, 0o644)
+    except OSError:
+        pass
 finally:
     if os.path.exists(tmp_path):
         try:

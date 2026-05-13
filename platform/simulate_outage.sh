@@ -144,6 +144,46 @@ case "${MODE}" in
       crash)
         docker start "${cid}" >/dev/null
         echo "recover: started ${cid} after crash"
+        # The log shipper (docker logs -f) died when the container was killed.
+        # Restart it now and update the stored PID so destroy_env.sh can clean it up.
+        APP_LOG="${SANDBOX_ROOT}/logs/${TARGET_ENV}/app.log"
+        mkdir -p "$(dirname "${APP_LOG}")"
+        chmod a+rwx "$(dirname "${APP_LOG}")" 2>/dev/null || true
+        nohup docker logs -f "${cid}" >> "${APP_LOG}" 2>&1 &
+        NEW_LOG_PID=$!
+        disown "${NEW_LOG_PID}" 2>/dev/null || true
+        echo "recover: restarted log shipper (pid=${NEW_LOG_PID})"
+        STATE_PATH="${SANDBOX_ROOT}/envs/${TARGET_ENV}.json"
+        if [[ -f "${STATE_PATH}" ]]; then
+          python3 - "${STATE_PATH}" "${NEW_LOG_PID}" <<'PY'
+import json, os, sys, tempfile
+path, new_pid = sys.argv[1], int(sys.argv[2])
+try:
+    data = json.loads(open(path, encoding="utf-8").read())
+except Exception:
+    sys.exit(0)
+data["log_shipper_pid"] = new_pid
+directory = os.path.dirname(path)
+fd, tmp_path = tempfile.mkstemp(prefix=".tmp_", suffix=".json", dir=directory)
+try:
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, sort_keys=True)
+        f.write("\n")
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp_path, path)
+    try:
+        os.chmod(path, 0o644)
+    except OSError:
+        pass
+finally:
+    if os.path.exists(tmp_path):
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+PY
+        fi
         ;;
       pause)
         docker unpause "${cid}" >/dev/null
