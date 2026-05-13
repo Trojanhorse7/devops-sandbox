@@ -10,10 +10,15 @@ fi
 export SANDBOX_ROOT="${SANDBOX_ROOT:-$(cd "${_common_dir}/.." && pwd)}"
 
 if [[ -f "${SANDBOX_ROOT}/.env" ]]; then
+  # .env often sets SANDBOX_ROOT to the host clone path (patch_env_root / Makefile).
+  # When scripts run inside the API container, SANDBOX_ROOT must stay /sandbox (the mount).
+  # Preserve the effective root across sourcing so paths stay inside the container filesystem.
+  _sandbox_root_effective="${SANDBOX_ROOT}"
   set -a
   # shellcheck disable=SC1090
   source "${SANDBOX_ROOT}/.env"
   set +a
+  export SANDBOX_ROOT="${_sandbox_root_effective}"
 fi
 
 : "${NGINX_CONTAINER_NAME:=sandbox-nginx}"
